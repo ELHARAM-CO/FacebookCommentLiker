@@ -74,22 +74,8 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:paddingEnd="5dp">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="الفاصل الزمني بين العمليات"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_secondary" />
-
-                        <Spinner
-                            android:id="@+id/delay"
-                            android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            android:layout_marginTop="4dp"
-                            android:background="@drawable/bg_input"
-                            android:spinnerMode="dropdown" />
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="الفاصل الزمني بين العمليات" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/text_secondary" />
+                        <Spinner android:id="@+id/delay" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="4dp" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -98,128 +84,56 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:paddingStart="5dp">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="عدد العمليات في كل مرة"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_secondary" />
-
-                        <Spinner
-                            android:id="@+id/limit"
-                            android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            android:layout_marginTop="4dp"
-                            android:background="@drawable/bg_input"
-                            android:spinnerMode="dropdown" />
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="عدد العمليات في كل مرة" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/text_secondary" />
+                        <Spinner android:id="@+id/limit" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="4dp" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <EditText
-                    android:id="@+id/startTime"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="13dp"
+                    android:text="وقت البدء"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_secondary" />
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_input"
-                    android:hint="وقت البدء HH:MM — اتركه فارغًا للبدء فورًا"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_secondary"
-                    android:singleLine="true"
-                    android:inputType="time"
-                    android:paddingLeft="12dp"
-                    android:paddingRight="12dp" />
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+                    <Spinner android:id="@+id/hour" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
+                    <Spinner android:id="@+id/minute" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="6dp" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
+                    <Spinner android:id="@+id/ampm" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.35" android:layout_marginStart="6dp" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="اترك خانات الساعة والدقائق وصباحًا/مساءً فارغة للبدء فورًا"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:layout_marginTop="14dp"
                     android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/open"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_secondary_button"
-                        android:text="فتح المنشور"
-                        android:textColor="@color/primary"
-                        android:textStyle="bold"
-                        android:textSize="13sp"
-                        android:stateListAnimator="@null" />
-
-                    <Button
-                        android:id="@+id/start"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_primary_button"
-                        android:text="بدء التشغيل"
-                        android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:textSize="13sp"
-                        android:stateListAnimator="@null" />
-
-                    <Button
-                        android:id="@+id/stop"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/bg_stop_button"
-                        android:text="إيقاف"
-                        android:textColor="@color/danger"
-                        android:textStyle="bold"
-                        android:textSize="13sp"
-                        android:stateListAnimator="@null" />
+                    <Button android:id="@+id/open" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginEnd="4dp" android:background="@drawable/bg_secondary_button" android:text="فتح المنشور" android:textColor="@color/primary" android:textStyle="bold" android:textSize="13sp" android:stateListAnimator="@null" />
+                    <Button android:id="@+id/start" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:layout_marginEnd="4dp" android:background="@drawable/bg_primary_button" android:text="بدء التشغيل" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="13sp" android:stateListAnimator="@null" />
+                    <Button android:id="@+id/stop" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:background="@drawable/bg_stop_button" android:text="إيقاف" android:textColor="@color/danger" android:textStyle="bold" android:textSize="13sp" android:stateListAnimator="@null" />
                 </LinearLayout>
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="vertical"
-                android:background="@drawable/bg_card">
-
-                <TextView
-                    android:id="@+id/status"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="الحالة: متوقف"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:paddingLeft="4dp"
-                    android:paddingRight="4dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="8dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="سجل التنفيذ"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_secondary"
-                    android:paddingBottom="5dp" />
-
-                <TextView
-                    android:id="@+id/log"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="السجل:"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_primary"
-                    android:background="@drawable/bg_log"
-                    android:minHeight="120dp"
-                    android:gravity="top|start"
-                    android:padding="10dp" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="10dp">
+                <TextView android:id="@+id/status" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="الحالة: متوقف" android:textSize="15sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="7dp" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="سجل التنفيذ" android:textSize="13sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:paddingBottom="5dp" />
+                <ScrollView android:id="@+id/logScroll" android:layout_width="match_parent" android:layout_height="150dp" android:background="@drawable/bg_log" android:fillViewport="true" android:scrollbars="vertical">
+                    <TextView android:id="@+id/log" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="السجل:" android:textSize="12sp" android:textColor="@color/text_primary" android:gravity="top|start" android:padding="10dp" />
+                </ScrollView>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -238,12 +152,24 @@
         android:clickable="true"
         android:focusable="true" />
 
-    <WebView
-        android:id="@+id/web"
+    <FrameLayout
+        android:id="@+id/webContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="2"
-        android:minHeight="120dp"
-        android:background="#FFFFFF"
-        android:overScrollMode="always" />
+        android:minHeight="180dp">
+        <WebView android:id="@+id/web" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#FFFFFF" android:overScrollMode="always" />
+        <Button
+            android:id="@+id/fullscreenButton"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="10dp"
+            android:visibility="gone"
+            android:background="@drawable/bg_primary_button"
+            android:text="تصغير صفحة Facebook"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:stateListAnimator="@null" />
+    </FrameLayout>
 </LinearLayout>

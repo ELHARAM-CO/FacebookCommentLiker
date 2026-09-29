@@ -1,146 +1,348 @@
 package com.alharam.inviter;
 
-import android.app.*;
-import android.os.*;
-import android.content.*;
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.view.*;
-import android.webkit.*;
-import android.widget.*;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.Spinner;
+import android.widget.TextView;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends Activity {
- WebView web; TextView status,log,resizeHandle; EditText url,startTime; Spinner limit,delay; ScrollView topPanel;
- Handler handler=new Handler(Looper.getMainLooper()); boolean running=false; int sent=0; int noInvitePasses=0; int stagnantPasses=0;
- Runnable task; SharedPreferences prefs;
+    WebView web;
+    TextView status, log, resizeHandle;
+    EditText url;
+    Spinner limit, delay, hour, minute, ampm;
+    ScrollView topPanel, logScroll;
+    View webContainer;
+    Button fullscreenButton;
+    Handler handler = new Handler(Looper.getMainLooper());
+    boolean running = false;
+    boolean fullscreenWeb = false;
+    int sent = 0;
+    int noInvitePasses = 0;
+    Runnable task;
+    SharedPreferences prefs;
 
- public void onCreate(Bundle b){
-  super.onCreate(b); setContentView(R.layout.activity_main);
-  web=findViewById(R.id.web); status=findViewById(R.id.status); log=findViewById(R.id.log);
-  url=findViewById(R.id.url); limit=findViewById(R.id.limit); delay=findViewById(R.id.delay); startTime=findViewById(R.id.startTime);
-  prefs=getSharedPreferences("settings",0);
-  url.setText(prefs.getString("url",""));
-  startTime.setText(prefs.getString("time",""));
-  setupSpinners();
-  topPanel=findViewById(R.id.topPanel); resizeHandle=findViewById(R.id.resizeHandle);
-  setupResizableFacebookArea();
-  WebSettings s=web.getSettings(); s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true); s.setLoadWithOverviewMode(false); s.setUseWideViewPort(true); s.setBuiltInZoomControls(false); s.setDisplayZoomControls(false); web.setVerticalScrollBarEnabled(true); web.setHorizontalScrollBarEnabled(false); web.setOverScrollMode(View.OVER_SCROLL_ALWAYS); web.setNestedScrollingEnabled(true);
-  web.setWebViewClient(new WebViewClient()); web.setWebChromeClient(new WebChromeClient());
-  web.post(() -> {
-    ViewGroup.LayoutParams lp = web.getLayoutParams();
-    lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
-    web.setLayoutParams(lp);
-    web.requestLayout();
-  });
-  web.loadUrl("https://www.facebook.com/");
-  findViewById(R.id.open).setOnClickListener(v->{save(); String u=url.getText().toString().trim();
-    if(!u.isEmpty()) web.loadUrl(u); else addLog("أدخل رابط المنشور أولًا.");});
-  findViewById(R.id.start).setOnClickListener(v->{save(); scheduleOrStart();});
-  findViewById(R.id.stop).setOnClickListener(v->{stop();});
- }
- void setupSpinners(){
-  ArrayList<String> delays=new ArrayList<>(); for(int i=1;i<=300;i++) delays.add(String.valueOf(i));
-  ArrayList<String> limits=new ArrayList<>(); for(int i=1;i<=1000;i++) limits.add(String.valueOf(i));
-  ArrayAdapter<String> da=new ArrayAdapter<>(this,android.R.layout.simple_spinner_item,delays); da.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); delay.setAdapter(da);
-  ArrayAdapter<String> la=new ArrayAdapter<>(this,android.R.layout.simple_spinner_item,limits); la.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); limit.setAdapter(la);
-  delay.setSelection(Math.max(0,Math.min(299,prefs.getInt("delay",20)-1)));
-  limit.setSelection(Math.max(0,Math.min(999,prefs.getInt("limit",10)-1)));
- }
- int spinnerValue(Spinner s,int d){try{return Integer.parseInt(String.valueOf(s.getSelectedItem()));}catch(Exception x){return d;}}
- void save(){prefs.edit().putString("url",url.getText().toString()).putInt("limit",spinnerValue(limit,10))
-   .putInt("delay",spinnerValue(delay,20)).putString("time",startTime.getText().toString()).apply();}
- void setupResizableFacebookArea(){
-  int saved=prefs.getInt("webHeight",0);
-  if(saved>0) web.post(() -> applyWebHeight(saved));
-  resizeHandle.setOnTouchListener(new View.OnTouchListener(){float downY; int startWeb;
-   public boolean onTouch(View v,MotionEvent e){
-    switch(e.getActionMasked()){
-     case MotionEvent.ACTION_DOWN: downY=e.getRawY(); startWeb=web.getHeight(); v.setPressed(true); return true;
-     case MotionEvent.ACTION_MOVE:
-      int desired=(int)(startWeb-(e.getRawY()-downY)); applyWebHeight(desired); return true;
-     case MotionEvent.ACTION_UP: case MotionEvent.ACTION_CANCEL:
-      v.setPressed(false); prefs.edit().putInt("webHeight",web.getHeight()).apply(); return true;
-    } return true;
-   }});
- }
- void applyWebHeight(int h){
-  int parentH=((View)web.getParent()).getHeight(); int minWeb=120; int minTop=180;
-  if(parentH<=0)return;
-  int maxWeb=Math.max(minWeb,parentH-resizeHandle.getHeight()-minTop);
-  h=Math.max(minWeb,Math.min(maxWeb,h));
-  ViewGroup.LayoutParams wlp=web.getLayoutParams(); wlp.height=h; if(wlp instanceof LinearLayout.LayoutParams)((LinearLayout.LayoutParams)wlp).weight=0; web.setLayoutParams(wlp);
-  ViewGroup.LayoutParams tlp=topPanel.getLayoutParams(); tlp.height=Math.max(minTop,parentH-resizeHandle.getHeight()-h); if(tlp instanceof LinearLayout.LayoutParams)((LinearLayout.LayoutParams)tlp).weight=0; topPanel.setLayoutParams(tlp);
-  web.requestLayout(); topPanel.requestLayout();
- }
- void scheduleOrStart(){
-   String t=startTime.getText().toString().trim();
-   if(t.isEmpty()){startNow();return;}
-   try{
-    String[] a=t.split(":"); Calendar c=Calendar.getInstance(); c.set(Calendar.HOUR_OF_DAY,Integer.parseInt(a[0]));
-    c.set(Calendar.MINUTE,Integer.parseInt(a[1])); c.set(Calendar.SECOND,0);
-    if(c.getTimeInMillis()<=System.currentTimeMillis()) c.add(Calendar.DATE,1);
-    long ms=c.getTimeInMillis()-System.currentTimeMillis(); status.setText("⏰ مجدول: "+t);
-    handler.postDelayed(this::startNow,ms); addLog("تمت جدولة التشغيل.");
-   }catch(Exception e){addLog("صيغة الوقت غير صحيحة؛ استخدم HH:MM");}
- }
- void startNow(){
-  running=true; sent=0; noInvitePasses=0; stagnantPasses=0; int max=Math.min(1000,spinnerValue(limit,10)); int d=Math.max(1,Math.min(300,spinnerValue(delay,20)));
-  status.setText("🟢 يعمل: 0 / "+max); addLog("بدأ التشغيل.");
-  task=new Runnable(){public void run(){
-   if(!running)return; if(sent>=max){stop(); addLog("اكتمل الحد المحدد.");return;}
-   String js="(function(){"+
-    "let els=[...document.querySelectorAll('button,[role=\\\"button\\\"],span[role=\\\"button\\\"]')].filter(e=>e.offsetParent!==null&&!e.disabled);"+
-    "let norm=t=>(t||'').trim().toLowerCase();"+
-    "let skip=/^(invited|already invited|following|followed|liked|like|مدعو|تمت الدعوة|مدعو بالفعل|يتابع|متابع|تمت المتابعة|أعجبني|إعجاب|اعجاب)$/i;"+
-    "let x=els.find(e=>{let t=norm(e.innerText||e.textContent);"+
-    "return (t==='invite'||t==='دعوة'||t.includes('invite'))&&!skip.test(t);});"+
-    "let before=window.scrollY;"+
-    "if(x){x.click();return JSON.stringify({state:'clicked',y:before});}"+
-    "let maxY=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);"+
-    "let atEnd=window.scrollY>=Math.max(0,maxY-40);"+
-    "window.scrollBy(0,650);"+
-    "return JSON.stringify({state:atEnd?'end':'skip',y:before,maxY:maxY});})()";
-   web.evaluateJavascript(js,v->{if(!running)return;
-     String r=v==null?"":v.replace("\\\"","\"").replace("\\\\","\\");
-     if(r.contains("\"state\":\"clicked\"")){
-       sent++; noInvitePasses=0; stagnantPasses=0;
-       status.setText("🟢 تمت دعوة "+sent+" / "+max);
-       addLog("تم العثور على Invite وإرسال الدعوة رقم "+sent+".");
-       handler.postDelayed(this,d*1000L);
-     }else if(r.contains("\"state\":\"end\"")){
-       noInvitePasses++;
-       if(noInvitePasses>=1){
-         int total=sent;
-         running=false;
-         if(task!=null)handler.removeCallbacks(task);
-         status.setText("✅ انتهى المنشور");
-         addLog("✅ انتهى المنشور الحالي — تم تنفيذ "+total+" دعوة.");
-         addLog("⏹ تم التوقف تلقائيًا لمنع تكرار نفس المنشور.");
-       }else{
-         handler.postDelayed(this,700);
-       }
-     }else{
-       noInvitePasses++;
-       if(noInvitePasses>=5){
-         int total=sent;
-         running=false;
-         if(task!=null)handler.removeCallbacks(task);
-         status.setText("✅ انتهى المنشور");
-         addLog("✅ لم يعد هناك Invite جديد بعد الفحص — تم تنفيذ "+total+" دعوة.");
-         addLog("⏹ تم التوقف تلقائيًا لمنع التكرار.");
-       }else{
-         addLog("لا يوجد Invite في الجزء الحالي؛ جاري فحص الجزء التالي.");
-         handler.postDelayed(this,700);
-       }
-     }
-   });
-  }};
-  handler.post(task);
- }
- void stop(){int total=sent; running=false;if(task!=null)handler.removeCallbacks(task);status.setText("🔴 متوقف");addLog("تم الإيقاف يدويًا — إجمالي الدعوات في هذا المنشور: "+total+".");}
- void addLog(String s){String tm=new SimpleDateFormat("HH:mm:ss",Locale.getDefault()).format(new Date());
-  log.append("\n["+tm+"] "+s);}
- @Override public void onBackPressed(){if(web.canGoBack())web.goBack();else super.onBackPressed();}
+    @Override public void onCreate(Bundle b) {
+        super.onCreate(b);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        setContentView(R.layout.activity_main);
+
+        web = findViewById(R.id.web);
+        webContainer = findViewById(R.id.webContainer);
+        fullscreenButton = findViewById(R.id.fullscreenButton);
+        status = findViewById(R.id.status);
+        log = findViewById(R.id.log);
+        logScroll = findViewById(R.id.logScroll);
+        url = findViewById(R.id.url);
+        limit = findViewById(R.id.limit);
+        delay = findViewById(R.id.delay);
+        hour = findViewById(R.id.hour);
+        minute = findViewById(R.id.minute);
+        ampm = findViewById(R.id.ampm);
+        topPanel = findViewById(R.id.topPanel);
+        resizeHandle = findViewById(R.id.resizeHandle);
+
+        prefs = getSharedPreferences("settings", 0);
+        url.setText(prefs.getString("url", ""));
+        setupSpinners();
+        restoreStartTime();
+        setupResizableFacebookArea();
+
+        WebSettings s = web.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setLoadWithOverviewMode(false);
+        s.setUseWideViewPort(true);
+        s.setBuiltInZoomControls(false);
+        s.setDisplayZoomControls(false);
+        s.setSupportZoom(false);
+        web.setVerticalScrollBarEnabled(true);
+        web.setHorizontalScrollBarEnabled(false);
+        web.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
+        web.setNestedScrollingEnabled(true);
+        web.setWebChromeClient(new WebChromeClient());
+        web.setWebViewClient(new WebViewClient());
+        web.loadUrl("https://www.facebook.com/");
+
+        findViewById(R.id.open).setOnClickListener(v -> {
+            save();
+            String u = url.getText().toString().trim();
+            if (!u.isEmpty()) web.loadUrl(u);
+            else addLog("أدخل رابط المنشور أولًا.");
+        });
+        findViewById(R.id.start).setOnClickListener(v -> { save(); scheduleOrStart(); });
+        findViewById(R.id.stop).setOnClickListener(v -> stop());
+        fullscreenButton.setOnClickListener(v -> setFacebookFullscreen(!fullscreenWeb));
+    }
+
+    void setupSpinners() {
+        ArrayList<String> delays = new ArrayList<>();
+        for (int i = 1; i <= 300; i++) delays.add(String.valueOf(i));
+        ArrayList<String> limits = new ArrayList<>();
+        for (int i = 1; i <= 1000; i++) limits.add(String.valueOf(i));
+
+        setSpinner(delay, delays, prefs.getInt("delay", 20) - 1);
+        setSpinner(limit, limits, prefs.getInt("limit", 10) - 1);
+
+        ArrayList<String> hours = new ArrayList<>(); hours.add("—");
+        for (int i = 1; i <= 12; i++) hours.add(String.format(Locale.getDefault(), "%02d", i));
+        ArrayList<String> minutes = new ArrayList<>(); minutes.add("—");
+        for (int i = 0; i < 60; i++) minutes.add(String.format(Locale.getDefault(), "%02d", i));
+        ArrayList<String> periods = new ArrayList<>(); periods.add("—"); periods.add("صباحًا"); periods.add("مساءً");
+        setSpinner(hour, hours, 0);
+        setSpinner(minute, minutes, 0);
+        setSpinner(ampm, periods, 0);
+    }
+
+    void setSpinner(Spinner s, ArrayList<String> values, int selection) {
+        ArrayAdapter<String> a = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, values) {
+            @Override public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                TextView v = (TextView) super.getView(position, convertView, parent);
+                v.setTextColor(Color.parseColor("#172033"));
+                v.setTextSize(14);
+                v.setGravity(android.view.Gravity.CENTER_VERTICAL | android.view.Gravity.RIGHT);
+                v.setPadding(12, 0, 12, 0);
+                return v;
+            }
+        };
+        a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        s.setAdapter(a);
+        s.setSelection(Math.max(0, Math.min(values.size() - 1, selection)));
+    }
+
+    void restoreStartTime() {
+        int h = prefs.getInt("hour", 0), m = prefs.getInt("minute", 0), p = prefs.getInt("ampm", 0);
+        hour.setSelection(h);
+        minute.setSelection(m);
+        ampm.setSelection(p);
+    }
+
+    int spinnerValue(Spinner s, int d) {
+        try { return Integer.parseInt(String.valueOf(s.getSelectedItem())); }
+        catch (Exception x) { return d; }
+    }
+
+    void save() {
+        prefs.edit()
+                .putString("url", url.getText().toString())
+                .putInt("limit", spinnerValue(limit, 10))
+                .putInt("delay", spinnerValue(delay, 20))
+                .putInt("hour", hour.getSelectedItemPosition())
+                .putInt("minute", minute.getSelectedItemPosition())
+                .putInt("ampm", ampm.getSelectedItemPosition())
+                .apply();
+    }
+
+    String selectedStartTime() {
+        String h = String.valueOf(hour.getSelectedItem());
+        String m = String.valueOf(minute.getSelectedItem());
+        String p = String.valueOf(ampm.getSelectedItem());
+        boolean emptyH = hour.getSelectedItemPosition() == 0;
+        boolean emptyM = minute.getSelectedItemPosition() == 0;
+        boolean emptyP = ampm.getSelectedItemPosition() == 0;
+        if (emptyH && emptyM && emptyP) return "";
+        if (emptyH || emptyM || emptyP) return null;
+        return h + ":" + m + " " + p;
+    }
+
+    void scheduleOrStart() {
+        String selected = selectedStartTime();
+        if (selected == null) {
+            addLog("اختر الساعة والدقائق وصباحًا/مساءً معًا، أو اترك الثلاثة فارغين للبدء فورًا.");
+            return;
+        }
+        if (selected.isEmpty()) { startNow(); return; }
+        try {
+            int h12 = Integer.parseInt(String.valueOf(hour.getSelectedItem()));
+            int m = Integer.parseInt(String.valueOf(minute.getSelectedItem()));
+            String p = String.valueOf(ampm.getSelectedItem());
+            int h24 = h12 % 12;
+            if ("مساءً".equals(p)) h24 += 12;
+            Calendar c = Calendar.getInstance();
+            c.set(Calendar.HOUR_OF_DAY, h24);
+            c.set(Calendar.MINUTE, m);
+            c.set(Calendar.SECOND, 0);
+            c.set(Calendar.MILLISECOND, 0);
+            if (c.getTimeInMillis() <= System.currentTimeMillis()) c.add(Calendar.DATE, 1);
+            long ms = c.getTimeInMillis() - System.currentTimeMillis();
+            status.setText("⏰ مجدول: " + selected);
+            addLog("تمت جدولة التشغيل الساعة " + selected + ".");
+            if (task != null) handler.removeCallbacks(task);
+            handler.postDelayed(this::startNow, ms);
+        } catch (Exception e) {
+            addLog("تعذر قراءة وقت البدء.");
+        }
+    }
+
+    void startNow() {
+        running = true;
+        sent = 0;
+        noInvitePasses = 0;
+        int max = Math.min(1000, spinnerValue(limit, 10));
+        int d = Math.max(1, Math.min(300, spinnerValue(delay, 20)));
+        status.setText("🟢 يعمل: 0 / " + max);
+        addLog("بدأ التشغيل من صفحة الـInvite الحالية؛ لن يتم فتح صفحات العملاء.");
+        task = new Runnable() {
+            @Override public void run() {
+                if (!running) return;
+                if (sent >= max) { finishRun("اكتمل الحد المحدد: " + sent + " دعوة."); return; }
+
+                String js = "(function(){" +
+                        "const norm=t=>(t||'').replace(/\\s+/g,' ').trim().toLowerCase();" +
+                        "const visible=e=>{if(!e||e.disabled||e.getAttribute('aria-disabled')==='true')return false;const r=e.getBoundingClientRect();const s=getComputedStyle(e);return r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none';};" +
+                        "const isInvite=t=>t==='invite'||t==='دعوة'||t==='invite friends'||t==='دعوة الأصدقاء';" +
+                        "const candidates=[...document.querySelectorAll('button,[role=\\\"button\\\"]')].filter(visible);" +
+                        "let x=candidates.find(e=>{let t=norm(e.innerText||e.textContent);if(!isInvite(t))return false;if(e.closest('a[href]'))return false;return true;});" +
+                        "if(x){x.scrollIntoView({block:'center',inline:'nearest'});x.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true,view:window}));x.dispatchEvent(new MouseEvent('mouseup',{bubbles:true,cancelable:true,view:window}));x.click();return JSON.stringify({state:'clicked',text:norm(x.innerText||x.textContent),y:window.scrollY});}" +
+                        "const before=window.scrollY;const maxY=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);const atEnd=before>=Math.max(0,maxY-40);if(!atEnd)window.scrollBy(0,650);return JSON.stringify({state:atEnd?'end':'scrolled',y:before,maxY:maxY});" +
+                        "})()";
+                web.evaluateJavascript(js, v -> {
+                    if (!running) return;
+                    String r = v == null ? "" : v.replace("\\\"", "\"").replace("\\\\", "\\");
+                    if (r.contains("\"state\":\"clicked\"")) {
+                        sent++; noInvitePasses = 0;
+                        status.setText("🟢 تمت دعوة " + sent + " / " + max);
+                        addLog("تم الضغط على زر Invite الحقيقي — الدعوة رقم " + sent + ".");
+                        handler.postDelayed(task, d * 1000L);
+                    } else if (r.contains("\"state\":\"end\"")) {
+                        noInvitePasses++;
+                        if (noInvitePasses >= 2) finishRun("انتهت قائمة الـInvite — تم تنفيذ " + sent + " دعوة.");
+                        else handler.postDelayed(task, 900);
+                    } else {
+                        noInvitePasses = 0;
+                        addLog("لا يوجد زر Invite في الجزء الظاهر؛ تم التمرير داخل نفس الصفحة للبحث عن التالي.");
+                        handler.postDelayed(task, 900);
+                    }
+                });
+            }
+        };
+        handler.post(task);
+    }
+
+    void finishRun(String message) {
+        running = false;
+        if (task != null) handler.removeCallbacks(task);
+        status.setText("✅ انتهى التشغيل");
+        addLog("✅ " + message);
+    }
+
+    void stop() {
+        int total = sent;
+        running = false;
+        if (task != null) handler.removeCallbacks(task);
+        status.setText("🔴 متوقف");
+        addLog("تم الإيقاف يدويًا — إجمالي الدعوات: " + total + ".");
+    }
+
+    void addLog(String s) {
+        String tm = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+        log.append((log.length() == 0 ? "" : "\n") + "[" + tm + "] " + s);
+        logScroll.post(() -> logScroll.fullScroll(View.FOCUS_DOWN));
+    }
+
+    void setupResizableFacebookArea() {
+        resizeHandle.setOnTouchListener(new View.OnTouchListener() {
+            float downY; int startWeb;
+            @Override public boolean onTouch(View v, MotionEvent e) {
+                switch (e.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN: downY = e.getRawY(); startWeb = webContainer.getHeight(); v.setPressed(true); return true;
+                    case MotionEvent.ACTION_MOVE:
+                        if (Math.abs(e.getRawY() - downY) > 8) {
+                            int desired = (int)(startWeb - (e.getRawY() - downY));
+                            applyWebHeight(desired);
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        v.setPressed(false);
+                        if (Math.abs(e.getRawY() - downY) < 12) {
+                            setFacebookFullscreen(true);
+                        } else {
+                            prefs.edit().putInt("webHeight", webContainer.getHeight()).apply();
+                        }
+                        return true;
+                    case MotionEvent.ACTION_CANCEL:
+                        v.setPressed(false);
+                        prefs.edit().putInt("webHeight", webContainer.getHeight()).apply();
+                        return true;
+                    default: return true;
+                }
+            }
+        });
+        int saved = prefs.getInt("webHeight", 0);
+        if (saved > 0) resizeHandle.post(() -> applyWebHeight(saved));
+    }
+
+    void applyWebHeight(int h) {
+        int parentH = ((View) webContainer.getParent()).getHeight();
+        if (parentH <= 0) return;
+        int minWeb = 180, minTop = 220;
+        int maxWeb = Math.max(minWeb, parentH - resizeHandle.getHeight() - minTop);
+        h = Math.max(minWeb, Math.min(maxWeb, h));
+        ViewGroup.LayoutParams wlp = webContainer.getLayoutParams();
+        wlp.height = h;
+        if (wlp instanceof LinearLayout.LayoutParams) ((LinearLayout.LayoutParams)wlp).weight = 0;
+        webContainer.setLayoutParams(wlp);
+        ViewGroup.LayoutParams tlp = topPanel.getLayoutParams();
+        tlp.height = Math.max(minTop, parentH - resizeHandle.getHeight() - h);
+        if (tlp instanceof LinearLayout.LayoutParams) ((LinearLayout.LayoutParams)tlp).weight = 0;
+        topPanel.setLayoutParams(tlp);
+        webContainer.requestLayout(); topPanel.requestLayout();
+    }
+
+    void setFacebookFullscreen(boolean full) {
+        fullscreenWeb = full;
+        if (full) {
+            topPanel.setVisibility(View.GONE);
+            resizeHandle.setVisibility(View.GONE);
+            ViewGroup.LayoutParams lp = webContainer.getLayoutParams();
+            lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            if (lp instanceof LinearLayout.LayoutParams) ((LinearLayout.LayoutParams)lp).weight = 1;
+            webContainer.setLayoutParams(lp);
+            fullscreenButton.setText("تصغير صفحة Facebook");
+            fullscreenButton.setVisibility(View.VISIBLE);
+            addLog("تم تكبير صفحة Facebook بالكامل للمساعدة في التحقق.");
+        } else {
+            topPanel.setVisibility(View.VISIBLE);
+            resizeHandle.setVisibility(View.VISIBLE);
+            fullscreenButton.setVisibility(View.GONE);
+            int saved = prefs.getInt("webHeight", 0);
+            if (saved > 0) applyWebHeight(saved);
+            else {
+                ViewGroup.LayoutParams lp = webContainer.getLayoutParams();
+                lp.height = 0;
+                if (lp instanceof LinearLayout.LayoutParams) ((LinearLayout.LayoutParams)lp).weight = 2;
+                webContainer.setLayoutParams(lp);
+            }
+        }
+        web.requestLayout();
+    }
+
+    @Override public void onBackPressed() {
+        if (fullscreenWeb) { setFacebookFullscreen(false); return; }
+        if (web.canGoBack()) web.goBack(); else super.onBackPressed();
+    }
 }
