@@ -5,22 +5,23 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.content.SharedPreferences;
+import android.content.Context;
+import android.util.AttributeSet;
 import android.graphics.Color;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.Gravity;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class MainActivity extends Activity {
     WebView web;
     TextView status, log, resizeHandle;
     EditText url;
-    Spinner limit, delay, hour, minute, ampm;
+    StepperView limit, delay, hour, minute, ampm;
     ScrollView topPanel, logScroll;
     View webContainer;
     Button fullscreenButton;
@@ -67,8 +68,7 @@ public class MainActivity extends Activity {
 
         prefs = getSharedPreferences("settings", 0);
         url.setText(prefs.getString("url", ""));
-        setupSpinners();
-        restoreStartTime();
+        setupSteppers();
         setupResizableFacebookArea();
 
         WebSettings s = web.getSettings();
@@ -98,51 +98,18 @@ public class MainActivity extends Activity {
         fullscreenButton.setOnClickListener(v -> setFacebookFullscreen(!fullscreenWeb));
     }
 
-    void setupSpinners() {
-        ArrayList<String> delays = new ArrayList<>();
-        for (int i = 1; i <= 300; i++) delays.add(String.valueOf(i));
-        ArrayList<String> limits = new ArrayList<>();
-        for (int i = 1; i <= 1000; i++) limits.add(String.valueOf(i));
+    void setupSteppers() {
+        delay.configure(1, 300, prefs.getInt("delay", 20), false, "ثانية");
+        limit.configure(1, 1000, prefs.getInt("limit", 10), false, "عملية");
 
-        setSpinner(delay, delays, prefs.getInt("delay", 20) - 1);
-        setSpinner(limit, limits, prefs.getInt("limit", 10) - 1);
-
-        ArrayList<String> hours = new ArrayList<>(); hours.add("—");
-        for (int i = 1; i <= 12; i++) hours.add(String.format(Locale.getDefault(), "%02d", i));
-        ArrayList<String> minutes = new ArrayList<>(); minutes.add("—");
-        for (int i = 0; i < 60; i++) minutes.add(String.format(Locale.getDefault(), "%02d", i));
-        ArrayList<String> periods = new ArrayList<>(); periods.add("—"); periods.add("صباحًا"); periods.add("مساءً");
-        setSpinner(hour, hours, 0);
-        setSpinner(minute, minutes, 0);
-        setSpinner(ampm, periods, 0);
+        hour.configure(1, 12, prefs.getInt("hourValue", 0), true, "ساعة");
+        minute.configure(0, 59, prefs.getInt("minuteValue", 0), true, "دقيقة");
+        ampm.configureText(new String[]{"صباحًا", "مساءً"}, prefs.getInt("ampmValue", -1), true);
     }
 
-    void setSpinner(Spinner s, ArrayList<String> values, int selection) {
-        ArrayAdapter<String> a = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, values) {
-            @Override public View getView(int position, View convertView, android.view.ViewGroup parent) {
-                TextView v = (TextView) super.getView(position, convertView, parent);
-                v.setTextColor(Color.parseColor("#172033"));
-                v.setTextSize(14);
-                v.setGravity(android.view.Gravity.CENTER_VERTICAL | android.view.Gravity.RIGHT);
-                v.setPadding(12, 0, 12, 0);
-                return v;
-            }
-        };
-        a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        s.setAdapter(a);
-        s.setSelection(Math.max(0, Math.min(values.size() - 1, selection)));
-    }
-
-    void restoreStartTime() {
-        int h = prefs.getInt("hour", 0), m = prefs.getInt("minute", 0), p = prefs.getInt("ampm", 0);
-        hour.setSelection(h);
-        minute.setSelection(m);
-        ampm.setSelection(p);
-    }
-
-    int spinnerValue(Spinner s, int d) {
-        try { return Integer.parseInt(String.valueOf(s.getSelectedItem())); }
-        catch (Exception x) { return d; }
+    int spinnerValue(StepperView s, int d) {
+        int v = s.getNumericValue();
+        return v < 0 ? d : v;
     }
 
     void save() {
@@ -150,35 +117,34 @@ public class MainActivity extends Activity {
                 .putString("url", url.getText().toString())
                 .putInt("limit", spinnerValue(limit, 10))
                 .putInt("delay", spinnerValue(delay, 20))
-                .putInt("hour", hour.getSelectedItemPosition())
-                .putInt("minute", minute.getSelectedItemPosition())
-                .putInt("ampm", ampm.getSelectedItemPosition())
+                .putInt("hourValue", hour.getNumericValue())
+                .putInt("minuteValue", minute.getNumericValue())
+                .putInt("ampmValue", ampm.getTextIndex())
                 .apply();
     }
 
     String selectedStartTime() {
-        String h = String.valueOf(hour.getSelectedItem());
-        String m = String.valueOf(minute.getSelectedItem());
-        String p = String.valueOf(ampm.getSelectedItem());
-        boolean emptyH = hour.getSelectedItemPosition() == 0;
-        boolean emptyM = minute.getSelectedItemPosition() == 0;
-        boolean emptyP = ampm.getSelectedItemPosition() == 0;
-        if (emptyH && emptyM && emptyP) return "";
-        if (emptyH || emptyM || emptyP) return null;
-        return h + ":" + m + " " + p;
+        int h = hour.getNumericValue();
+        int m = minute.getNumericValue();
+        int p = ampm.getTextIndex();
+        if (h < 0 && m < 0 && p < 0) return "";
+        if (h < 0 || m < 0 || p < 0) return null;
+        String hs = String.format(Locale.getDefault(), "%02d", h);
+        String ms = String.format(Locale.getDefault(), "%02d", m);
+        return hs + ":" + ms + " " + ampm.getTextValue();
     }
 
     void scheduleOrStart() {
         String selected = selectedStartTime();
         if (selected == null) {
-            addLog("اختر الساعة والدقائق وصباحًا/مساءً معًا، أو اترك الثلاثة فارغين للبدء فورًا.");
+            addLog("اختر الساعات والدقائق وصباحًا/مساءً معًا، أو اترك الساعات والدقائق فارغة للبدء فورًا.");
             return;
         }
         if (selected.isEmpty()) { startNow(); return; }
         try {
-            int h12 = Integer.parseInt(String.valueOf(hour.getSelectedItem()));
-            int m = Integer.parseInt(String.valueOf(minute.getSelectedItem()));
-            String p = String.valueOf(ampm.getSelectedItem());
+            int h12 = hour.getNumericValue();
+            int m = minute.getNumericValue();
+            String p = ampm.getTextValue();
             int h24 = h12 % 12;
             if ("مساءً".equals(p)) h24 += 12;
             Calendar c = Calendar.getInstance();
@@ -259,7 +225,8 @@ public class MainActivity extends Activity {
 
     void addLog(String s) {
         String tm = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-        log.append((log.length() == 0 ? "" : "\n") + "[" + tm + "] " + s);
+        log.append((log.length() == 0 ? "" : "
+") + "[" + tm + "] " + s);
         logScroll.post(() -> logScroll.fullScroll(View.FOCUS_DOWN));
     }
 
@@ -345,4 +312,7 @@ public class MainActivity extends Activity {
         if (fullscreenWeb) { setFacebookFullscreen(false); return; }
         if (web.canGoBack()) web.goBack(); else super.onBackPressed();
     }
+
+
+
 }

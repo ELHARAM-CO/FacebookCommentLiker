@@ -50,7 +50,7 @@
                 <EditText
                     android:id="@+id/url"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="50dp"
                     android:layout_marginTop="14dp"
                     android:background="@drawable/bg_input"
                     android:hint="رابط منشور Facebook"
@@ -59,8 +59,8 @@
                     android:textColorHint="@color/text_secondary"
                     android:singleLine="true"
                     android:inputType="textUri"
-                    android:paddingLeft="12dp"
-                    android:paddingRight="12dp" />
+                    android:paddingLeft="14dp"
+                    android:paddingRight="14dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -74,8 +74,18 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:paddingEnd="5dp">
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="الفاصل الزمني بين العمليات" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/text_secondary" />
-                        <Spinner android:id="@+id/delay" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="4dp" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="الفاصل الزمني بين العمليات"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_secondary" />
+                        <com.alharam.inviter.StepperView
+                            android:id="@+id/delay"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:layout_marginTop="4dp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -84,8 +94,18 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:paddingStart="5dp">
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="عدد العمليات في كل مرة" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/text_secondary" />
-                        <Spinner android:id="@+id/limit" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="4dp" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="عدد العمليات في كل مرة"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_secondary" />
+                        <com.alharam.inviter.StepperView
+                            android:id="@+id/limit"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:layout_marginTop="4dp" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -100,23 +120,41 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="54dp"
+                    android:layoutDirection="ltr"
                     android:layout_marginTop="4dp"
                     android:orientation="horizontal">
-                    <Spinner android:id="@+id/hour" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
-                    <Spinner android:id="@+id/minute" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="6dp" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
-                    <Spinner android:id="@+id/ampm" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.35" android:layout_marginStart="6dp" android:background="@drawable/bg_input" android:spinnerMode="dropdown" />
+                    <com.alharam.inviter.StepperView
+                        android:id="@+id/ampm"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.15"
+                        android:layout_marginEnd="4dp" />
+                    <com.alharam.inviter.StepperView
+                        android:id="@+id/hour"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp" />
+                    <com.alharam.inviter.StepperView
+                        android:id="@+id/minute"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:text="اترك خانات الساعة والدقائق وصباحًا/مساءً فارغة للبدء فورًا"
+                    android:text="اترك الساعات والدقائق فارغة للبدء فورًا"
                     android:textSize="11sp"
                     android:textColor="@color/text_secondary"
                     android:gravity="center" />
 
+                <!-- These three controls are intentionally unchanged. -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
@@ -164,12 +202,13 @@
             android:layout_width="wrap_content"
             android:layout_height="44dp"
             android:layout_gravity="top|end"
-            android:layout_margin="10dp"
-            android:visibility="gone"
-            android:background="@drawable/bg_primary_button"
+            android:layout_margin="8dp"
             android:text="تصغير صفحة Facebook"
-            android:textColor="#FFFFFF"
+            android:textSize="12sp"
             android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_primary_button"
+            android:visibility="gone"
             android:stateListAnimator="@null" />
     </FrameLayout>
 </LinearLayout>
