@@ -225,8 +225,7 @@ public class MainActivity extends Activity {
 
     void addLog(String s) {
         String tm = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-        log.append((log.length() == 0 ? "" : "
-") + "[" + tm + "] " + s);
+        log.append((log.length() == 0 ? "" : "\n") + "[" + tm + "] " + s);
         logScroll.post(() -> logScroll.fullScroll(View.FOCUS_DOWN));
     }
 
