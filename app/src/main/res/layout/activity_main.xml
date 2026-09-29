@@ -47,11 +47,19 @@
                     android:textColor="@color/text_secondary"
                     android:gravity="center" />
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="رابط المنشور"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_secondary" />
+
                 <EditText
                     android:id="@+id/url"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_marginTop="14dp"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="5dp"
                     android:background="@drawable/bg_input"
                     android:hint="رابط منشور Facebook"
                     android:textSize="14sp"
@@ -114,41 +122,86 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="13dp"
                     android:text="وقت البدء"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_secondary" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="54dp"
+                    android:layout_height="wrap_content"
                     android:layoutDirection="ltr"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:orientation="horizontal">
-                    <com.alharam.inviter.StepperView
-                        android:id="@+id/ampm"
+
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1.15"
-                        android:layout_marginEnd="4dp" />
-                    <com.alharam.inviter.StepperView
-                        android:id="@+id/hour"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="5dp">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="صباحًا / مساءً"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:textColor="@color/text_secondary" />
+                        <com.alharam.inviter.StepperView
+                            android:id="@+id/ampm"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:orientation="vertical"
                         android:layout_marginStart="2dp"
-                        android:layout_marginEnd="2dp" />
-                    <com.alharam.inviter.StepperView
-                        android:id="@+id/minute"
+                        android:layout_marginEnd="2dp">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="الساعة"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:textColor="@color/text_secondary" />
+                        <com.alharam.inviter.StepperView
+                            android:id="@+id/hour"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginStart="4dp" />
+                        android:orientation="vertical"
+                        android:layout_marginStart="5dp">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="الدقيقة"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:textColor="@color/text_secondary" />
+                        <com.alharam.inviter.StepperView
+                            android:id="@+id/minute"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
+                    android:layout_marginTop="6dp"
                     android:text="اترك الساعات والدقائق فارغة للبدء فورًا"
                     android:textSize="11sp"
                     android:textColor="@color/text_secondary"
@@ -164,6 +217,18 @@
                     <Button android:id="@+id/start" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:layout_marginEnd="4dp" android:background="@drawable/bg_primary_button" android:text="بدء التشغيل" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="13sp" android:stateListAnimator="@null" />
                     <Button android:id="@+id/stop" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="4dp" android:background="@drawable/bg_stop_button" android:text="إيقاف" android:textColor="@color/danger" android:textStyle="bold" android:textSize="13sp" android:stateListAnimator="@null" />
                 </LinearLayout>
+
+                <Button
+                    android:id="@+id/exitApp"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_stop_button"
+                    android:text="إغلاق التطبيق"
+                    android:textColor="@color/danger"
+                    android:textStyle="bold"
+                    android:textSize="13sp"
+                    android:stateListAnimator="@null" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="10dp">
@@ -195,7 +260,9 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="2"
-        android:minHeight="180dp">
+        android:minHeight="180dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
         <WebView android:id="@+id/web" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#FFFFFF" android:overScrollMode="always" />
         <Button
             android:id="@+id/fullscreenButton"

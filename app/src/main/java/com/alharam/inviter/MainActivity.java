@@ -18,6 +18,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceRequest;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -74,17 +75,25 @@ public class MainActivity extends Activity {
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
-        s.setLoadWithOverviewMode(false);
+        s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setBuiltInZoomControls(false);
         s.setDisplayZoomControls(false);
         s.setSupportZoom(false);
         web.setVerticalScrollBarEnabled(true);
         web.setHorizontalScrollBarEnabled(false);
+        web.setInitialScale(0);
+        web.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         web.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
         web.setNestedScrollingEnabled(true);
         web.setWebChromeClient(new WebChromeClient());
-        web.setWebViewClient(new WebViewClient());
+        web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                String js = "(function(){try{var m=document.querySelector(\"meta[name=\'viewport\"]\");if(!m){m=document.createElement(\"meta\");m.name=\"viewport\";document.head.appendChild(m);}m.content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes\";document.documentElement.style.width=\"100%\";if(document.body){document.body.style.width=\"100%\";document.body.style.maxWidth=\"100%\";}}catch(e){}})();";
+                view.evaluateJavascript(js, null);
+            }
+        });
         web.loadUrl("https://www.facebook.com/");
 
         findViewById(R.id.open).setOnClickListener(v -> {
@@ -95,6 +104,10 @@ public class MainActivity extends Activity {
         });
         findViewById(R.id.start).setOnClickListener(v -> { save(); scheduleOrStart(); });
         findViewById(R.id.stop).setOnClickListener(v -> stop());
+        findViewById(R.id.exitApp).setOnClickListener(v -> {
+            if (running) stop();
+            finishAffinity();
+        });
         fullscreenButton.setOnClickListener(v -> setFacebookFullscreen(!fullscreenWeb));
     }
 
@@ -257,8 +270,22 @@ public class MainActivity extends Activity {
                 }
             }
         });
-        int saved = prefs.getInt("webHeight", 0);
-        if (saved > 0) resizeHandle.post(() -> applyWebHeight(saved));
+        // Start with the Facebook area filling its normal allocated portion.
+        // A user drag can still save a custom height for the current session.
+        resizeHandle.post(() -> {
+            ViewGroup.LayoutParams lp = webContainer.getLayoutParams();
+            if (lp instanceof LinearLayout.LayoutParams) {
+                lp.height = 0;
+                ((LinearLayout.LayoutParams) lp).weight = 2f;
+                webContainer.setLayoutParams(lp);
+            }
+            ViewGroup.LayoutParams tlp = topPanel.getLayoutParams();
+            if (tlp instanceof LinearLayout.LayoutParams) {
+                tlp.height = 0;
+                ((LinearLayout.LayoutParams) tlp).weight = 1f;
+                topPanel.setLayoutParams(tlp);
+            }
+        });
     }
 
     void applyWebHeight(int h) {
