@@ -6,6 +6,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.content.SharedPreferences;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.AttributeSet;
 import android.graphics.Color;
 import android.view.MotionEvent;
@@ -88,6 +90,66 @@ public class MainActivity extends Activity {
         web.setNestedScrollingEnabled(true);
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
+            @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return handleSpecialUrl(view, request.getUrl().toString());
+            }
+
+            @Override public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleSpecialUrl(view, url);
+            }
+
+            private boolean handleSpecialUrl(WebView view, String targetUrl) {
+                if (targetUrl == null || targetUrl.isEmpty()) return false;
+
+                Uri uri = Uri.parse(targetUrl);
+                String scheme = uri.getScheme();
+                if (scheme == null) return false;
+
+                // Normal web links must continue through the WebView normally.
+                if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+                    return false;
+                }
+
+                // Facebook sometimes sends intent:// links containing a normal
+                // Facebook URL in browser_fallback_url. Extract that URL and
+                // load it in this same WebView instead of launching an external app.
+                if ("intent".equalsIgnoreCase(scheme)) {
+                    try {
+                        Intent intent = Intent.parseUri(targetUrl, Intent.URI_INTENT_SCHEME);
+                        String fallback = intent.getStringExtra("browser_fallback_url");
+                        if (fallback != null && !fallback.trim().isEmpty()) {
+                            view.loadUrl(fallback.trim());
+                            return true;
+                        }
+
+                        Uri data = intent.getData();
+                        if (data != null) {
+                            String dataScheme = data.getScheme();
+                            if ("http".equalsIgnoreCase(dataScheme) || "https".equalsIgnoreCase(dataScheme)) {
+                                view.loadUrl(data.toString());
+                                return true;
+                            }
+                        }
+                    } catch (Exception ignored) {
+                        // Do not let a malformed intent URI break the WebView.
+                    }
+                    return true;
+                }
+
+                // A bare fb:// URL cannot be rendered by WebView. Keep it
+                // inside the app instead of allowing ERR_UNKNOWN_URL_SCHEME.
+                if ("fb".equalsIgnoreCase(scheme)) {
+                    String fallback = uri.getQueryParameter("browser_fallback_url");
+                    if (fallback != null && !fallback.trim().isEmpty()) {
+                        view.loadUrl(fallback.trim());
+                    }
+                    return true;
+                }
+
+                // Prevent other unsupported schemes from reaching WebView.
+                return true;
+            }
+
             @Override public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 String js = "(function(){try{var m=document.querySelector(\"meta[name=\'viewport\"]\");if(!m){m=document.createElement(\"meta\");m.name=\"viewport\";document.head.appendChild(m);}m.content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes\";document.documentElement.style.width=\"100%\";if(document.body){document.body.style.width=\"100%\";document.body.style.maxWidth=\"100%\";}}catch(e){}})();";
